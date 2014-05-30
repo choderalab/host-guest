@@ -77,7 +77,7 @@ class ITCExperiment(object):
         # If dilution is required, make sure buffer source is specified.
         if (self.syringe_dilution_factor is not None):
             if (buffer_source is None):
-                raise Exception("buffer must be specified if either syringe or cell concentrations are specified"
+                raise Exception("buffer must be specified if either syringe or cell concentrations are specified")
             if (self.syringe_dilution_factor > 1.0):
                 raise Exception("Requested syringe concentration (%s) is greater than syringe source concentration (%s)." % (str(syringe_concentration), str(syringe_source.concentration)))
 
@@ -192,7 +192,7 @@ class ITCExperimentSet(object):
         # TODO: Change this to go left-to-right in ITC plates?
         destination_locations = list()
         for (plate_index, plate) in enumerate(self.destination_plates):
-            PlateNumber = plate_index + 1 
+            PlateNumber = plate_index + 1
             for index in range(96):
                 Position = index + 1
                 WellName = self._wellIndexToName(Position)
@@ -282,7 +282,7 @@ class ITCExperimentSet(object):
             worklist_script += 'B;\r\n' # execute queued batch of commands
 
             # Create datafile name.
-            datecode = '20140306' # TODO: Build with date
+            datecode = '20140530' # TODO: Build with date
             seriescode = 'a' # TODO: Use intelligent coding?
             indexcode = '%d' % (experiment_number + 1)
             itcdata.DataFile = datecode + seriescode + indexcode
@@ -324,7 +324,7 @@ class ITCExperimentSet(object):
         keys = self._tracked_quantities.keys()
         keys.sort()
         for key in keys:
-            print "%32s %12.1f mL" % (key, self._tracked_quantities[key] / units.milliliters)
+            print "%32s %12.3f mL" % (key, self._tracked_quantities[key] / units.milliliters)
 
         # Set validated flag.
         self._validated = True
