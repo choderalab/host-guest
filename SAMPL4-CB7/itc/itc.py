@@ -310,7 +310,7 @@ class ITCExperimentSet(object):
             itcdata.PreRinseSource = ''
 
             # TODO: Autodetect if sample destination is used.
-            itcdata.SaveSampleDestination = ''
+            itcdata.SaveSampleDestination = itcdata.CellSource
 
             # Store Tecan and Excel data for this experiment.
             experiment.tecandata = tecandata
