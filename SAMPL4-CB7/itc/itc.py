@@ -18,13 +18,13 @@ class ITCProtocol(object):
            The name of the 'ItcMethod' to be written to the Excel file for the Auto iTC-200.
         analysis_method : str
            The name of the 'AnalysisMethod' to be written to the Excel file for the Auto iTC-200.
-        
+
         """
         self.name = name
         self.sample_prep_method = sample_prep_method
         self.itc_method = itc_method
         self.analysis_method = analysis_method
-        
+
 class ITCExperiment(object):
     def __init__(self, name, syringe_source, cell_source, protocol, buffer_source=None, syringe_concentration=None, cell_concentration=None):
         """
@@ -77,16 +77,16 @@ class ITCExperiment(object):
         # If dilution is required, make sure buffer source is specified.
         if (self.syringe_dilution_factor is not None):
             if (buffer_source is None):
-                raise Exception("buffer must be specified if either syringe or cell concentrations are specified")            
+                raise Exception("buffer must be specified if either syringe or cell concentrations are specified"
             if (self.syringe_dilution_factor > 1.0):
                 raise Exception("Requested syringe concentration (%s) is greater than syringe source concentration (%s)." % (str(syringe_concentration), str(syringe_source.concentration)))
-        
+
         if (self.cell_dilution_factor is not None):
             if (buffer_source is None):
-                raise Exception("buffer must be specified if either syringe or cell concentrations are specified")            
+                raise Exception("buffer must be specified if either syringe or cell concentrations are specified")
             if (self.cell_dilution_factor > 1.0):
                 raise Exception("Requested cell concentration (%s) is greater than cell source concentration (%s)." % (str(cell_concentration), str(cell_source.concentration)))
-        
+
 class ITCExperimentSet(object):
     def __init__(self, name):
         """
@@ -115,7 +115,7 @@ class ITCExperimentSet(object):
 
         # TODO: Check if specified plate is allowed type of labware for use in Auto iTC-200.
         self.destination_plates.append(plate)
-        
+
     def addExperiment(self, experiment):
         """
         Add the specified ITC experiment to the experiment set.
@@ -127,14 +127,14 @@ class ITCExperimentSet(object):
 
         """
         self.experiments.append(experiment)
-            
+
     def _wellIndexToName(self, index):
         """
         Return the 96-well name (e.g. 'A6', 'B7') corresponding to Tecan well index.
-        
+
         Parameters
         ----------
-        index : int 
+        index : int
            Tecan well index (back to front, left to right), numbered from 1..96
 
         Returns
@@ -154,7 +154,7 @@ class ITCExperimentSet(object):
             fieldnames = ['DataFile', 'SampleName', 'SamplePrepMethod', 'ItcMethod', 'AnalysisMethod', 'CellConcentration', 'PipetteConcentration', 'CellSource', 'PipetteSource', 'PreRinseSource', 'SaveSampleDestination']
             for fieldname in fieldnames:
                 setattr(self, fieldname, None)
-    
+
     class TecanData(object):
         def __init__(self):
             fieldnames = ['cell_destination', 'cell_platename', 'cell_wellindex', 'syringe_plateindex', 'syringe_platename', 'syringe_wellindex']
@@ -176,7 +176,7 @@ class ITCExperimentSet(object):
             self._tracked_quantities[name] += volume
         else:
             self._tracked_quantities[name] = volume
-    
+
     def validate(self):
         """
         Validate that the specified set of ITC experiments can actually be set up, raising an exception if not.
@@ -184,7 +184,7 @@ class ITCExperimentSet(object):
         Additional experiment data fields (tecandata, itcdata)
 
         """
-        
+
         # TODO: Try to set up experiment, throwing exception upon failure.
 
         # Make a list of all the possible destination pipetting locations.
@@ -200,7 +200,7 @@ class ITCExperimentSet(object):
                 # Add plate number and well name for Auto iTC-200.
                 location.PlateNumber = PlateNumber
                 location.WellName = WellName
-                destination_locations.append(location)        
+                destination_locations.append(location)
 
         # Build worklist script.
         worklist_script = ""
@@ -213,7 +213,7 @@ class ITCExperimentSet(object):
 
             itcdata = ITCExperimentSet.ITCData()
             tecandata = ITCExperimentSet.TecanData()
-            
+
             # Find a place to put cell contents.
             if len(destination_locations) == 0:
                 raise Exception("Ran out of destination plates for experiment %d / %d" % (experiment_number, len(self.experiments)))
@@ -263,9 +263,9 @@ class ITCExperimentSet(object):
                 tipmask = 4
                 worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.buffer_source.RackLabel, experiment.buffer_source.RackType, 3, buffer_volume, tipmask)
                 worklist_script += 'D;%s;;%s;%d;;%f;;;%d\r\n' % (tecandata.syringe_destination.RackLabel, tecandata.syringe_destination.RackType, tecandata.syringe_destination.Position, buffer_volume, tipmask)
-                worklist_script += 'W;\r\n' # queue wash tips                
+                worklist_script += 'W;\r\n' # queue wash tips
                 self._trackQuantities(experiment.buffer_source, buffer_volume * units.microliters)
-                
+
             # Schedule syringe solution transfer.
             tipmask = 8
             try:
@@ -302,10 +302,10 @@ class ITCExperimentSet(object):
                 itcdata.PipetteConcentration = experiment.pipette.concentration / millimolar
             except:
                 itcdata.PipetteConcentration = 0
-            
+
             itcdata.CellSource = 'Plate%d, %s' % (tecandata.cell_destination.PlateNumber, tecandata.cell_destination.WellName)
             itcdata.PipetteSource = 'Plate%d, %s' % (tecandata.syringe_destination.PlateNumber, tecandata.syringe_destination.WellName)
-            
+
             # TODO: Autodetect if prerinse is used.
             itcdata.PreRinseSource = ''
 
@@ -315,7 +315,7 @@ class ITCExperimentSet(object):
             # Store Tecan and Excel data for this experiment.
             experiment.tecandata = tecandata
             experiment.itcdata = itcdata
-            
+
         # Save Tecan worklist.
         self.worklist = worklist_script
 
@@ -337,11 +337,11 @@ class ITCExperimentSet(object):
         ----------
         filename : str
            The name of the Tecan worklist file to write.
-        
+
         """
         if not self._validated:
             self.validate()
-        
+
         outfile = open(filename, 'w')
         outfile.write(self.worklist)
         outfile.close()
@@ -356,14 +356,14 @@ class ITCExperimentSet(object):
            The name of the Excel file to write.
 
         """
-        
+
         if not self._validated:
             self.validate()
 
         # Create new Excel spreadsheet.
         from openpyxl import Workbook
         wb = Workbook()
-        
+
         # Create plate sheet.
         ws = wb.get_active_sheet()
         ws.title = 'plate'
@@ -373,14 +373,14 @@ class ITCExperimentSet(object):
         fieldnames = ['DataFile', 'SampleName', 'SamplePrepMethod', 'ItcMethod', 'AnalysisMethod', 'CellConcentration', 'PipetteConcentration', 'CellSource', 'PipetteSource', 'PreRinseSource', 'SaveSampleDestination']
         for (column, fieldname) in enumerate(fieldnames):
             ws.cell(row=row, column=column).value = fieldname
-        
+
         # Create experiments.
         for experiment in self.experiments:
             row += 1
             for (column, fieldname) in enumerate(fieldnames):
                 ws.cell(row=row, column=column).value = getattr(experiment.itcdata, fieldname)
-        
+
         # Write workbook.
         wb.save(filename)
 
-        
+
