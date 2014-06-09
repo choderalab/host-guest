@@ -2,7 +2,6 @@
 
 import itc
 
-
 from simtk.unit import *
 
 # Define solvents.
@@ -16,7 +15,9 @@ nguests = 14 # number of guest compounds
 #nguests = 7 # number of guest compounds # DEBUG (one source plate only)
 host = Compound('host', molecular_weight=1162.9632*daltons, purity=0.7133)
 guest_molecular_weights = [209.12, 123.62, 153.65, 189.13, 187.11, 151.63, 135.64, 149.66, 163.69, 238.59, 147.65, 189.73, 173.68, 203.71]
+guest_compound_Ka = Quantity([21024287.6408, 13556262.0311, 81495.6444611, 1788684.70709, 2153596.60855, 769185.744612, 29967627.9188, 594389946.514, 2372114592.34, 683472.220385, 164811515.64, 6869559660.36, 28356538311.4, 396415131.021], liters/mole) #see dGtoKa.py
 guests = [ Compound(name='guest%02d' % (guest_index+1), molecular_weight=guest_molecular_weights[guest_index]*daltons, purity=0.975) for guest_index in range(nguests) ]
+
 
 # Define troughs on the instrument.
 from labware import Labware
@@ -33,13 +34,14 @@ source_plate = Labware(RackLabel='SourcePlate', RackType='5x3 Vial Holder')
 from automation import SimpleSolution, PipettingLocation
 host_solution = SimpleSolution(compound=host, compound_mass=1.6005*milligrams, solvent=buffer, solvent_mass=9.8011*grams, location=PipettingLocation(source_plate.RackLabel, source_plate.RackType, 1))
 guest_solutions = list()
+
 #guest_compound_masses = Quantity([2.145, 1.268, 1.576, 1.940, 1.919, 1.555, 1.391, 1.535, 1.679, 2.447, 1.514, 1.946, 1.781, 2.089], milligrams)
 guest_compound_masses = Quantity([2.190, 2.115, 1.595, 1.930, 2.160, 1.580, 1.610, 1.660, 1.520, 2.750, 2.07, 1.98, 1.80, 2.22], milligrams)
 guest_solvent_masses = Quantity([10.2082, 16.7849, 10.1190, 9.9465, 11.2541, 10.1593, 11.5725, 10.8128, 9.0517, 11.2354, 13.6704, 10.1732, 10.1047, 10.6252], grams)
+
+
 for guest_index in range(nguests):
     guest_solutions.append( SimpleSolution(compound=guests[guest_index], compound_mass=guest_compound_masses[guest_index], solvent=buffer, solvent_mass=guest_solvent_masses[guest_index], location=PipettingLocation(source_plate.RackLabel, source_plate.RackType, 2+guest_index)) )
-
-print guest_solutions[0]
 
 # Define ITC protocol.
 from itc import ITCProtocol
@@ -51,7 +53,7 @@ binding_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Plate
 cleaning_protocol = ITCProtocol('cleaning protocol', sample_prep_method='Plates Clean.setup', itc_method='water5inj.inj', analysis_method='Control')
 
 # Define ITC Experiment.
-from itc import ITCExperimentSet, ITCExperiment
+from itc import ITCExperimentSet, ITCExperiment, ITCHeuristicExperiment
 itc_experiment_set = ITCExperimentSet(name='SAMPL4-CB7 host-guest experiments') # use specified protocol by default
 # Add available plates for experiments.
 itc_experiment_set.addDestinationPlate(Labware(RackLabel='DestinationPlate', RackType='ITC Plate'))
@@ -74,15 +76,21 @@ for replicate in range(2):
     itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=host_solution, cell_source=buffer_trough, protocol=binding_protocol) )
 
 # Host/guests.
+# scale cell concentration to fix necessary syringe concentrations
+cell_scaling = 1.
 for guest_index in range(nguests):
     # Buffer into guest.
     for replicate in range(1):
         name = 'buffer into %s' % guests[guest_index].name
         itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough) )
-    # Host into guest.
+    # Host into guest.    
     for replicate in range(1):
         name = 'host into %s' % guests[guest_index].name
-        itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=host_solution, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough) )
+        itc_experiment_set.addExperiment( ITCHeuristicExperiment(name=name, syringe_source=host_solution, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar*cell_scaling, buffer_source=buffer_trough) )
+        
+        #optimize the syringe_concentration using heuristic equations and known binding constants
+        #TODO extract m, v and V0 from protocol somehow?
+        itc_experiment_set.experiments[-1].heuristic_syringe(guest_compound_Ka[guest_index], 10, Quantity(3., microliters), Quantity(202.8, microliters))
 
 # Add cleaning experiment.
 name = 'final cleaning water titration'

@@ -75,7 +75,7 @@ class ITCExperiment(object):
         if cell_concentration is not None:
             self.cell_dilution_factor = cell_concentration / cell_source.concentration
             self.cell_concentration = cell_concentration
-
+            
         # If dilution is required, make sure buffer source is specified.
         if (self.syringe_dilution_factor is not None):
             if (buffer_source is None):
@@ -88,6 +88,44 @@ class ITCExperiment(object):
                 raise Exception("buffer must be specified if either syringe or cell concentrations are specified")
             if (self.cell_dilution_factor > 1.0):
                 raise Exception("Requested cell concentration (%s) is greater than cell source concentration (%s)." % (str(cell_concentration), str(cell_source.concentration)))
+
+class ITCHeuristicExperiment(ITCExperiment):
+    def heuristic_syringe(self,Ka,m,v,V0,approx=False):
+        """
+        Optimize syringe concentration using heuristic equation.
+        
+        Parameters
+        ----------
+        Ka : simtk.unit.Quantity with units compatible with liters/moles
+            Association constant of titrant from titrand        
+        m : int
+            Number of injections in the protocol
+        v : simtk.unit.Quantity with units compatible with liter
+            Volume of single injection
+        v0 : simtk.unit.Quantity with units compatible with liter
+            Volume of cell
+        approx: bool
+            Use approximate equation [X]_s = R_m * [M]0 V/(m*v) if True
+            else, use exact equation [X]_s = R_m * [M]_0 (1- exp(-mv/V0))^-1
+    
+        """
+        
+        # c = [M]_0 * Ka
+        c = self.cell_concentration * Ka
+        
+        #R_m = 6.4/c^0.2 + 13/c
+        rm= 6.4/numpy.power(c,0.2) + 13/c
+
+        if not approx:
+            # Use exact equation [X]_s = R_m * [M]_0 (1- exp(-mv/V0))^-1
+            self.syringe_concentration = rm * self.cell_concentration * numpy.power( 1 - (numpy.exp(-1 * m * v/V0  )), -1)
+        else:
+            # Use approximate equation [X]_s = R_m * [M]0 V/(m*v)
+            self.syringe_concentration = rm * self.cell_concentration * V0 / (m * v)
+                
+        #compute the dilution factors
+        self.syringe_dilution_factor = numpy.float(self.syringe_concentration / self.syringe_source.concentration)
+        print self.syringe_concentration, self.syringe_source.concentration.in_units_of(units.millimolar)
 
 class ITCExperimentSet(object):
     def __init__(self, name):
