@@ -125,6 +125,7 @@ class ITCHeuristicExperiment(ITCExperiment):
                 
         #compute the dilution factors
         self.syringe_dilution_factor = numpy.float(self.syringe_concentration / self.syringe_source.concentration)
+        print "Required conc\t source conc"
         print self.syringe_concentration, self.syringe_source.concentration.in_units_of(units.millimolar)
 
 class ITCExperimentSet(object):
