@@ -125,7 +125,7 @@ class ITCHeuristicExperiment(ITCExperiment):
                 
         #compute the dilution factors
         self.syringe_dilution_factor = numpy.float(self.syringe_concentration / self.syringe_source.concentration)
-    
+
     def rescale(self):
         """Rescale the concentrations, in case they are larger than the source."""
         # if syringe concentration is larger than stock
