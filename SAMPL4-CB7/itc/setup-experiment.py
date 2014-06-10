@@ -32,7 +32,7 @@ source_plate = Labware(RackLabel='SourcePlate', RackType='5x3 Vial Holder')
 # TODO : Use actual compound and solvent masses.
 # NOTE: Host solution is diluted by 10x.
 from automation import SimpleSolution, PipettingLocation
-host_solution = SimpleSolution(compound=host, compound_mass=1.6005*milligrams, solvent=buffer, solvent_mass=9.8011*grams, location=PipettingLocation(source_plate.RackLabel, source_plate.RackType, 1))
+host_solution = SimpleSolution(compound=host, compound_mass=16.005*milligrams, solvent=buffer, solvent_mass=9.8011*grams, location=PipettingLocation(source_plate.RackLabel, source_plate.RackType, 1))
 guest_solutions = list()
 
 #guest_compound_masses = Quantity([2.145, 1.268, 1.576, 1.940, 1.919, 1.555, 1.391, 1.535, 1.679, 2.447, 1.514, 1.946, 1.781, 2.089], milligrams)
@@ -83,14 +83,16 @@ for guest_index in range(nguests):
     for replicate in range(1):
         name = 'buffer into %s' % guests[guest_index].name
         itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough) )
-    # Host into guest.    
+    # Host into guest.
     for replicate in range(1):
         name = 'host into %s' % guests[guest_index].name
         itc_experiment_set.addExperiment( ITCHeuristicExperiment(name=name, syringe_source=host_solution, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar*cell_scaling, buffer_source=buffer_trough) )
-        
+
         #optimize the syringe_concentration using heuristic equations and known binding constants
         #TODO extract m, v and V0 from protocol somehow?
-        itc_experiment_set.experiments[-1].heuristic_syringe(guest_compound_Ka[guest_index], 10, Quantity(3., microliters), Quantity(202.8, microliters))
+        itc_experiment_set.experiments[-1].heuristic_syringe(guest_compound_Ka[guest_index], 10, 3. * microliters, 202.8 * microliters)
+        #rescale if syringe > stock
+        itc_experiment_set.experiments[-1].rescale()
 
 # Add cleaning experiment.
 name = 'final cleaning water titration'
@@ -112,5 +114,3 @@ itc_experiment_set.writeTecanWorklist(worklist_filename)
 # Write Auto iTC-200 experiment spreadsheet.
 excel_filename = 'run-itc.xls'
 itc_experiment_set.writeAutoITCExcel(excel_filename)
-
-
