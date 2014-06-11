@@ -5,6 +5,8 @@ import simtk.unit as units
 
 import openpyxl # Excel spreadsheet I/O (for Auto iTC-200)
 
+from distutils.version import StrictVersion #For version testing 
+
 from datetime import datetime 
 
 class ITCProtocol(object):
@@ -429,17 +431,23 @@ class ITCExperimentSet(object):
         # Create plate sheet.
         ws = wb.get_active_sheet()
         ws.title = 'plate'
-
+        
+        # Openpyxl version incompatibility fix
+        if StrictVersion(openpyxl.__version__) >= StrictVersion('2.0.0'):
+            row = 1
+            start = 1
+        else:
+            row = 0
+            start = 0
         # Create header.
-        row = 0
         fieldnames = ['DataFile', 'SampleName', 'SamplePrepMethod', 'ItcMethod', 'AnalysisMethod', 'CellConcentration', 'PipetteConcentration', 'CellSource', 'PipetteSource', 'PreRinseSource', 'SaveSampleDestination']
-        for (column, fieldname) in enumerate(fieldnames):
+        for (column, fieldname) in enumerate(fieldnames,start=start):
             ws.cell(row=row, column=column).value = fieldname
 
         # Create experiments.
         for experiment in self.experiments:
             row += 1
-            for (column, fieldname) in enumerate(fieldnames):
+            for (column, fieldname) in enumerate(fieldnames,start=start):
                 ws.cell(row=row, column=column).value = getattr(experiment.itcdata, fieldname)
 
         # Write workbook.
