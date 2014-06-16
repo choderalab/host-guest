@@ -240,16 +240,21 @@ class ITCExperimentSet(object):
         else:
             self._tracked_quantities[name] = volume
 
-    def validate(self):
+    def validate(self, volumes=True,omit_zeroes=True):
         """
         Validate that the specified set of ITC experiments can actually be set up, raising an exception if not.
 
         Additional experiment data fields (tecandata, itcdata)
+        
+        volumes - bool (default=True)
+            Print out pipetting volumes
+        omit_zeroes - bool (default = True)
+            Omit operations with volumes below 0.01 ul 
 
         """
-
+        vlimit=10.0
         # TODO: Try to set up experiment, throwing exception upon failure.
-
+        
         # Make a list of all the possible destination pipetting locations.
         from automation import PipettingLocation
         # TODO: Change this to go left-to-right in ITC plates?
@@ -272,8 +277,14 @@ class ITCExperimentSet(object):
         self._resetTrackedQuantities()
 
         for (experiment_number, experiment) in enumerate(self.experiments):
+            #volume logging
+            volume_report = str()
+            
             experiment.experiment_number = experiment_number
-
+           
+            #volume logging
+            volume_report += "Experiment: %d\n" % ( experiment.experiment_number + 1 )
+            
             itcdata = ITCExperimentSet.ITCData()
             tecandata = ITCExperimentSet.TecanData()
 
@@ -289,25 +300,50 @@ class ITCExperimentSet(object):
                 # Compute buffer volume needed.
                 buffer_volume = cell_volume * (1.0 - experiment.cell_dilution_factor)
                 transfer_volume = cell_volume - buffer_volume 
-
+                 
+                #volume logging
+                bflag = tflag = ""
+                if buffer_volume < vlimit:
+                    if buffer_volume < 0.01 and omit_zeroes:
+                        bflag="\033[5;31m !!!"
+                    else:
+                        bflag="\033[5;41m !!!"
+                if transfer_volume < vlimit:
+                    if transfer_volume < 0.01 and omit_zeroes:
+                        tflag="\033[5;31m !!!"
+                    else:
+                        tflag="\033[5;41m !!!"
+                
+                volume_report += "%s Buffer   (ul):%.2f\033[0;0m \n" % (bflag, buffer_volume)
+                volume_report += "%s Transfer (ul):%.2f\033[0;0m \n" % (tflag, transfer_volume)
+                
                 # Schedule buffer transfer.
                 tipmask = 1
-                worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.buffer_source.RackLabel, experiment.buffer_source.RackType, 1, buffer_volume, tipmask)
-                worklist_script += 'D;%s;;%s;%d;;%f;;;%d\r\n' % (tecandata.cell_destination.RackLabel, tecandata.cell_destination.RackType, tecandata.cell_destination.Position, buffer_volume, tipmask)
-                worklist_script += 'W;\r\n' # queue wash tips
-                self._trackQuantities(experiment.buffer_source, buffer_volume * units.microliters)
+                if buffer_volume > 0.01 or not omit_zeroes:
+                    worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.buffer_source.RackLabel, experiment.buffer_source.RackType, 1, buffer_volume, tipmask)
+                    worklist_script += 'D;%s;;%s;%d;;%f;;;%d\r\n' % (tecandata.cell_destination.RackLabel, tecandata.cell_destination.RackType, tecandata.cell_destination.Position, buffer_volume, tipmask)
+                    
+                    #no wash if no actions taken
+                    worklist_script += 'W;\r\n' # queue wash tips                    
+                    self._trackQuantities(experiment.buffer_source, buffer_volume * units.microliters)
 
             # Schedule cell solution transfer.
             tipmask = 2
             try:
                 # Assume source is Solution.
-                worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.cell_source.location.RackLabel, experiment.cell_source.location.RackType, experiment.cell_source.location.Position, transfer_volume, tipmask)
+                if transfer_volume > 0.01 or not omit_zeroes:
+                    worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.cell_source.location.RackLabel, experiment.cell_source.location.RackType, experiment.cell_source.location.Position, transfer_volume, tipmask)
             except:
                 # Assume source is Labware.
-                worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.cell_source.RackLabel, experiment.cell_source.RackType, 2, transfer_volume, tipmask)
-            worklist_script += 'D;%s;;%s;%d;;%f;;;%d\r\n' % (tecandata.cell_destination.RackLabel, tecandata.cell_destination.RackType, tecandata.cell_destination.Position, transfer_volume, tipmask)
-            worklist_script += 'W;\r\n' # queue wash tips
-            self._trackQuantities(experiment.cell_source, transfer_volume * units.microliters)
+                if transfer_volume > 0.01 or not omit_zeroes:
+                    worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.cell_source.RackLabel, experiment.cell_source.RackType, 2, transfer_volume, tipmask)
+            
+            if transfer_volume > 0.01 or not omit_zeroes:
+                worklist_script += 'D;%s;;%s;%d;;%f;;;%d\r\n' % (tecandata.cell_destination.RackLabel, tecandata.cell_destination.RackType, tecandata.cell_destination.Position, transfer_volume, tipmask)
+                
+                #no wash if no actions taken
+                worklist_script += 'W;\r\n' # queue wash tips
+                self._trackQuantities(experiment.cell_source, transfer_volume * units.microliters)
 
             # Find a place to put syringe contents.
             if len(destination_locations) == 0:
@@ -321,25 +357,63 @@ class ITCExperimentSet(object):
                 # Compute buffer volume needed.
                 buffer_volume = syringe_volume * (1.0 - experiment.syringe_dilution_factor)
                 transfer_volume = syringe_volume - buffer_volume 
-
+                
+                #volume logging
+                bflag = sflag = ""
+                
+                if buffer_volume < vlimit:
+                    if buffer_volume < 0.01 and omit_zeroes:
+                        bflag="\033[5;31m !!!"
+                    else:
+                        bflag="\033[5;41m !!!"
+                if syringe_volume < vlimit:
+                    if syringe_volume < 0.01 and omit_zeroes:
+                        sflag="\033[5;31m !!!"
+                    else:
+                        sflag="\033[5;41m !!!"
+                    
+                volume_report += "%s Buffer  (ul):%.2f \033[0;0m \n" % (bflag, buffer_volume)
+                volume_report += "%s Syringe (ul):%.2f \033[0;0m \n\n" % (sflag, syringe_volume)
+                
                 # Schedule buffer transfer.
                 tipmask = 4
-                worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.buffer_source.RackLabel, experiment.buffer_source.RackType, 3, buffer_volume, tipmask)
-                worklist_script += 'D;%s;;%s;%d;;%f;;;%d\r\n' % (tecandata.syringe_destination.RackLabel, tecandata.syringe_destination.RackType, tecandata.syringe_destination.Position, buffer_volume, tipmask)
-                worklist_script += 'W;\r\n' # queue wash tips
-                self._trackQuantities(experiment.buffer_source, buffer_volume * units.microliters)
+                
+                if buffer_volume > 0.01 or not omit_zeroes:
+                    worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.buffer_source.RackLabel, experiment.buffer_source.RackType, 3, buffer_volume, tipmask)
+                    worklist_script += 'D;%s;;%s;%d;;%f;;;%d\r\n' % (tecandata.syringe_destination.RackLabel, tecandata.syringe_destination.RackType, tecandata.syringe_destination.Position, buffer_volume, tipmask)
+                    
+                    #no wash if no actions taken
+                    worklist_script += 'W;\r\n' # queue wash tips
+                    self._trackQuantities(experiment.buffer_source, buffer_volume * units.microliters)
 
             # Schedule syringe solution transfer.
             tipmask = 8
             try:
                 # Assume source is Solution.
-                worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.syringe_source.location.RackLabel, experiment.syringe_source.location.RackType, experiment.syringe_source.location.Position, transfer_volume, tipmask)
+                if transfer_volume > 0.01 or not omit_zeroes:
+                    worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.syringe_source.location.RackLabel, experiment.syringe_source.location.RackType, experiment.syringe_source.location.Position, transfer_volume, tipmask)
             except:
                 # Assume source is Labware.
-                worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.syringe_source.RackLabel, experiment.syringe_source.RackType, 4, transfer_volume, tipmask)
-            worklist_script += 'D;%s;;%s;%d;;%f;;;%d\r\n' % (tecandata.syringe_destination.RackLabel, tecandata.syringe_destination.RackType, tecandata.syringe_destination.Position, transfer_volume, tipmask)
-            worklist_script += 'W;\r\n' # queue wash tips
-            self._trackQuantities(experiment.syringe_source, transfer_volume * units.microliters)
+                if transfer_volume > 0.01 or not omit_zeroes:
+                    worklist_script += 'A;%s;;%s;%d;;%f;;;%d\r\n' % (experiment.syringe_source.RackLabel, experiment.syringe_source.RackType, 4, transfer_volume, tipmask)
+
+            if transfer_volume > 0.01 or not omit_zeroes:            
+                worklist_script += 'D;%s;;%s;%d;;%f;;;%d\r\n' % (tecandata.syringe_destination.RackLabel, tecandata.syringe_destination.RackType, tecandata.syringe_destination.Position, transfer_volume, tipmask)
+                worklist_script += 'W;\r\n' # queue wash tips
+                self._trackQuantities(experiment.syringe_source, transfer_volume * units.microliters)
+            
+            #volume logging
+            sflag = ""
+            if syringe_volume < vlimit:
+                if syringe_volume < 0.01 and omit_zeroes:
+                    sflag="\033[5;31m !!!"
+                else:
+                    sflag="\033[5;41m !!!"
+                    
+            volume_report += "%s Syringe (ul):%.2f \033[0;0m \n\n" % (sflag, syringe_volume)
+            
+            
+
 
             # Finish worklist section.
             worklist_script += 'B;\r\n' # execute queued batch of commands
@@ -379,7 +453,7 @@ class ITCExperimentSet(object):
             # Store Tecan and Excel data for this experiment.
             experiment.tecandata = tecandata
             experiment.itcdata = itcdata
-
+            if volumes: print volume_report
         # Save Tecan worklist.
         self.worklist = worklist_script
 
