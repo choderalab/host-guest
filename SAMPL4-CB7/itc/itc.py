@@ -252,7 +252,7 @@ class ITCExperimentSet(object):
             Omit operations with volumes below 0.01 ul 
 
         """
-        vlimit=10.0
+        vlimit=10.0 #microliters
         # TODO: Try to set up experiment, throwing exception upon failure.
         
         # Make a list of all the possible destination pipetting locations.
