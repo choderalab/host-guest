@@ -432,12 +432,12 @@ class ITCExperimentSet(object):
 
             millimolar = 0.001 * units.moles / units.liter
             try:
-                itcdata.CellConcentration = experiment.cell_source.concentration / millimolar
+                itcdata.CellConcentration = experiment.cell_concentration / millimolar
             except:
                 itcdata.CellConcentration = 0
 
             try:
-                itcdata.PipetteConcentration = experiment.pipette.concentration / millimolar
+                itcdata.PipetteConcentration = experiment.syringe_concentration / millimolar
             except:
                 itcdata.PipetteConcentration = 0
 

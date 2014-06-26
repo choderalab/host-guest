@@ -49,6 +49,7 @@ from itc import ITCProtocol
 # Protocol for 'control' titrations (water-water, buffer-buffer, titrations into buffer, etc.)
 control_protocol = ITCProtocol('control protocol', sample_prep_method='Plates Quick.setup', itc_method='water5inj.inj', analysis_method='Control')
 # Protocol for 1:1 binding analyis
+blank_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Chodera Load Cell Without Cleaning Cell After.setup', itc_method='jdccaiicbs.inj', analysis_method='Onesite')
 binding_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Plates Quick.setup', itc_method='jdccaiicbs.inj', analysis_method='Onesite')
 # Protocol for cleaning protocol
 cleaning_protocol = ITCProtocol('cleaning protocol', sample_prep_method='Plates Clean.setup', itc_method='water5inj.inj', analysis_method='Control')
@@ -83,7 +84,7 @@ for guest_index in range(nguests):
     # Buffer into guest.
     for replicate in range(1):
         name = 'buffer into %s' % guests[guest_index].name
-        itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough) )
+        itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=blank_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough) )
     # Host into guest.
     for replicate in range(1):
         name = 'host into %s' % guests[guest_index].name
