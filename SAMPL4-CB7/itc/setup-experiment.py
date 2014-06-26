@@ -11,7 +11,8 @@ buffer = Solvent('buffer', density=1.014*grams/milliliter)
 
 # Define compounds.
 from automation import Compound
-nguests = 14 # number of guest compounds
+nguests = 6 # overnight from 5pm till 9am
+#nguests = 14 # number of guest compounds
 #nguests = 7 # number of guest compounds # DEBUG (one source plate only)
 host = Compound('host', molecular_weight=1162.9632*daltons, purity=0.7133)
 guest_molecular_weights = [209.12, 123.62, 153.65, 189.13, 187.11, 151.63, 135.64, 149.66, 163.69, 238.59, 147.65, 189.73, 173.68, 203.71]
@@ -71,7 +72,7 @@ for replicate in range(1):
     itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=control_protocol) )
 
 # Host into buffer.
-for replicate in range(2):
+for replicate in range(1):
     name = 'host into buffer %d' % (replicate+1)
     itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=host_solution, cell_source=buffer_trough, protocol=binding_protocol) )
 
@@ -99,13 +100,13 @@ name = 'final cleaning water titration'
 itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=cleaning_protocol) )
 
 # Water control titrations.
-nfinal = 3
+nfinal = 2
 for replicate in range(nfinal):
     name = 'final water into water test %d' % (replicate+1)
     itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=control_protocol) )
 
 # Check that the experiment can be carried out using available solutions and plates.
-itc_experiment_set.validate()
+itc_experiment_set.validate(omit_zeroes=True)
 
 # Write Tecan EVO pipetting operations.
 worklist_filename = 'setup-itc.gwl'
