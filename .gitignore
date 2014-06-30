@@ -43,6 +43,14 @@ coverage.xml
 # Django stuff:
 *.log
 
+# jetbrains IDE
+.idea/
+*.iml
+
 # Sphinx documentation
 docs/_build/
+
+# Script generated output
+run-itc.xls?
+setup-itc.gwl
 
