@@ -47,10 +47,10 @@ for guest_index in range(nguests):
 # Define ITC protocol.
 from itc import ITCProtocol
 # Protocol for 'control' titrations (water-water, buffer-buffer, titrations into buffer, etc.)
-control_protocol = ITCProtocol('control protocol', sample_prep_method='Plates Quick.setup', itc_method='water5inj.inj', analysis_method='Control')
+control_protocol = ITCProtocol('control protocol', sample_prep_method='Plates Quick.setup', itc_method='ChoderaWaterWater.inj', analysis_method='Control')
 # Protocol for 1:1 binding analyis
-blank_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Chodera Load Cell Without Cleaning Cell After.setup', itc_method='jdccaiicbs.inj', analysis_method='Onesite')
-binding_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Plates Quick.setup', itc_method='jdccaiicbs.inj', analysis_method='Onesite')
+blank_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Chodera Load Cell Without Cleaning Cell After.setup', itc_method='ChoderaHostGuest.inj', analysis_method='Onesite')
+binding_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Plates Quick.setup', itc_method='ChoderaHostGuest.inj', analysis_method='Onesite')
 # Protocol for cleaning protocol
 cleaning_protocol = ITCProtocol('cleaning protocol', sample_prep_method='Plates Clean.setup', itc_method='water5inj.inj', analysis_method='Control')
 
