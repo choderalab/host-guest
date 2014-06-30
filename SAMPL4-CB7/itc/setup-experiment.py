@@ -86,24 +86,41 @@ for replicate in range(1):
 # scale cell concentration to fix necessary syringe concentrations
 cell_scaling = 1.
 for guest_index in range(nguests):
-    # Host into guest.
+
+    #We need to store the experiments before adding them to the set
+    host_guest_experiments = list()
+    buff_guest_experiments = list()
+
+    #Scaling factors per replicate
     factors = list()
+
+    # Define host into guest experiments.
     for replicate in range(1):
         name = 'host into %s' % guests[guest_index].name
-        itc_experiment_set.addExperiment( ITCHeuristicExperiment(name=name, syringe_source=host_solution, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar*cell_scaling, buffer_source=buffer_trough) )
-
+        experiment = ITCHeuristicExperiment(name=name, syringe_source=host_solution, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar*cell_scaling, buffer_source=buffer_trough)
         #optimize the syringe_concentration using heuristic equations and known binding constants
         #TODO extract m, v and V0 from protocol somehow?
-        itc_experiment_set.experiments[-1].heuristic_syringe(guest_compound_Ka[guest_index], 10, 3. * microliters, 202.8 * microliters)
+        experiment.heuristic_syringe(guest_compound_Ka[guest_index], 10, 3. * microliters, 202.8 * microliters)
         #rescale if syringe > stock. Store factor.
-        factors.append(itc_experiment_set.experiments[-1].rescale())
+        factors.append(experiment.rescale())
+        host_guest_experiments.append(experiment)
 
-    # Buffer into guest.
+    # Define buffer into guest experiments.
     for replicate in range(1):
         name = 'buffer into %s' % guests[guest_index].name
-        itc_experiment_set.addExperiment( ITCHeuristicExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=blank_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough) )
+        experiment = ITCHeuristicExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=blank_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough)
         #rescale to match host into guest experiment concentrations.
-        itc_experiment_set.experiments[-1].rescale(tfactor=factors[replicate])
+        experiment.rescale(tfactor=factors[replicate])
+        buff_guest_experiments.append(experiment)
+
+    # Add buffer to guest experiment(s) to set
+    for buff_guest_experiment in buff_guest_experiments:
+        itc_experiment_set.addExperiment(buff_guest_experiment)
+
+    # Add host to guest experiment(s) to set
+    for host_guest_experiment in host_guest_experiments:
+        itc_experiment_set.addExperiment(host_guest_experiment)
+
 
 # Add cleaning experiment.
 name = 'final cleaning water titration'
