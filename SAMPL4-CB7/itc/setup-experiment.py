@@ -72,6 +72,11 @@ for replicate in range(1):
     name = 'water into water %d' % (replicate+1)
     itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=control_protocol) )
 
+# Add buffer control titrations.
+for replicate in range(1):
+    name = 'buffer into buffer %d' % (replicate+1)
+    itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=buffer_trough, cell_source=buffer_trough, protocol=control_protocol) )
+
 # Host into buffer.
 for replicate in range(1):
     name = 'host into buffer %d' % (replicate+1)
