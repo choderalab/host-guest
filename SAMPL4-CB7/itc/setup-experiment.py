@@ -47,10 +47,10 @@ for guest_index in range(nguests):
 # Define ITC protocol.
 from itc import ITCProtocol
 # Protocol for 'control' titrations (water-water, buffer-buffer, titrations into buffer, etc.)
-control_protocol = ITCProtocol('control protocol', sample_prep_method='Plates Quick.setup', itc_method='water5inj.inj', analysis_method='Control')
+control_protocol = ITCProtocol('control protocol', sample_prep_method='Plates Quick.setup', itc_method='ChoderaWaterWater.inj', analysis_method='Control')
 # Protocol for 1:1 binding analyis
-blank_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Chodera Load Cell Without Cleaning Cell After.setup', itc_method='jdccaiicbs.inj', analysis_method='Onesite')
-binding_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Plates Quick.setup', itc_method='jdccaiicbs.inj', analysis_method='Onesite')
+blank_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Chodera Load Cell Without Cleaning Cell After.setup', itc_method='ChoderaHostGuest.inj', analysis_method='Onesite')
+binding_protocol = ITCProtocol('1:1 binding protocol', sample_prep_method='Plates Quick.setup', itc_method='ChoderaHostGuest.inj', analysis_method='Onesite')
 # Protocol for cleaning protocol
 cleaning_protocol = ITCProtocol('cleaning protocol', sample_prep_method='Plates Clean.setup', itc_method='water5inj.inj', analysis_method='Control')
 
@@ -72,6 +72,11 @@ for replicate in range(1):
     name = 'water into water %d' % (replicate+1)
     itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=control_protocol) )
 
+# Add buffer control titrations.
+for replicate in range(1):
+    name = 'buffer into buffer %d' % (replicate+1)
+    itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=buffer_trough, cell_source=buffer_trough, protocol=control_protocol) )
+
 # Host into buffer.
 for replicate in range(1):
     name = 'host into buffer %d' % (replicate+1)
@@ -81,20 +86,41 @@ for replicate in range(1):
 # scale cell concentration to fix necessary syringe concentrations
 cell_scaling = 1.
 for guest_index in range(nguests):
-    # Buffer into guest.
-    for replicate in range(1):
-        name = 'buffer into %s' % guests[guest_index].name
-        itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=blank_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough) )
-    # Host into guest.
+
+    #We need to store the experiments before adding them to the set
+    host_guest_experiments = list()
+    buff_guest_experiments = list()
+
+    #Scaling factors per replicate
+    factors = list()
+
+    # Define host into guest experiments.
     for replicate in range(1):
         name = 'host into %s' % guests[guest_index].name
-        itc_experiment_set.addExperiment( ITCHeuristicExperiment(name=name, syringe_source=host_solution, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar*cell_scaling, buffer_source=buffer_trough) )
-
+        experiment = ITCHeuristicExperiment(name=name, syringe_source=host_solution, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar*cell_scaling, buffer_source=buffer_trough)
         #optimize the syringe_concentration using heuristic equations and known binding constants
         #TODO extract m, v and V0 from protocol somehow?
-        itc_experiment_set.experiments[-1].heuristic_syringe(guest_compound_Ka[guest_index], 10, 3. * microliters, 202.8 * microliters)
-        #rescale if syringe > stock
-        itc_experiment_set.experiments[-1].rescale()
+        experiment.heuristic_syringe(guest_compound_Ka[guest_index], 10, 3. * microliters, 202.8 * microliters)
+        #rescale if syringe > stock. Store factor.
+        factors.append(experiment.rescale())
+        host_guest_experiments.append(experiment)
+
+    # Define buffer into guest experiments.
+    for replicate in range(1):
+        name = 'buffer into %s' % guests[guest_index].name
+        experiment = ITCHeuristicExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=blank_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough)
+        #rescale to match host into guest experiment concentrations.
+        experiment.rescale(tfactor=factors[replicate])
+        buff_guest_experiments.append(experiment)
+
+    # Add buffer to guest experiment(s) to set
+    for buff_guest_experiment in buff_guest_experiments:
+        itc_experiment_set.addExperiment(buff_guest_experiment)
+
+    # Add host to guest experiment(s) to set
+    for host_guest_experiment in host_guest_experiments:
+        itc_experiment_set.addExperiment(host_guest_experiment)
+
 
 # Add cleaning experiment.
 name = 'final cleaning water titration'
@@ -107,12 +133,12 @@ for replicate in range(nfinal):
     itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=control_protocol) )
 
 # Check that the experiment can be carried out using available solutions and plates.
-itc_experiment_set.validate(omit_zeroes=True)
+itc_experiment_set.validate(print_volumes=True, omit_zeroes=True)
 
 # Write Tecan EVO pipetting operations.
 worklist_filename = 'setup-itc.gwl'
 itc_experiment_set.writeTecanWorklist(worklist_filename)
 
 # Write Auto iTC-200 experiment spreadsheet.
-excel_filename = 'run-itc.xls'
+excel_filename = 'run-itc.xlsx'
 itc_experiment_set.writeAutoITCExcel(excel_filename)
