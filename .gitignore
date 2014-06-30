@@ -43,6 +43,10 @@ coverage.xml
 # Django stuff:
 *.log
 
+# jetbrains IDE
+.idea/
+*.iml
+
 # Sphinx documentation
 docs/_build/
 

@@ -114,5 +114,5 @@ worklist_filename = 'setup-itc.gwl'
 itc_experiment_set.writeTecanWorklist(worklist_filename)
 
 # Write Auto iTC-200 experiment spreadsheet.
-excel_filename = 'run-itc.xls'
+excel_filename = 'run-itc.xlsx'
 itc_experiment_set.writeAutoITCExcel(excel_filename)
