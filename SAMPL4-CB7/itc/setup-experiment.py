@@ -81,11 +81,8 @@ for replicate in range(1):
 # scale cell concentration to fix necessary syringe concentrations
 cell_scaling = 1.
 for guest_index in range(nguests):
-    # Buffer into guest.
-    for replicate in range(1):
-        name = 'buffer into %s' % guests[guest_index].name
-        itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=blank_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough) )
     # Host into guest.
+    factors = list()
     for replicate in range(1):
         name = 'host into %s' % guests[guest_index].name
         itc_experiment_set.addExperiment( ITCHeuristicExperiment(name=name, syringe_source=host_solution, cell_source=guest_solutions[guest_index], protocol=binding_protocol, cell_concentration=0.2*millimolar*cell_scaling, buffer_source=buffer_trough) )
@@ -93,8 +90,15 @@ for guest_index in range(nguests):
         #optimize the syringe_concentration using heuristic equations and known binding constants
         #TODO extract m, v and V0 from protocol somehow?
         itc_experiment_set.experiments[-1].heuristic_syringe(guest_compound_Ka[guest_index], 10, 3. * microliters, 202.8 * microliters)
-        #rescale if syringe > stock
-        itc_experiment_set.experiments[-1].rescale()
+        #rescale if syringe > stock. Store factor.
+        factors.append(itc_experiment_set.experiments[-1].rescale())
+
+    # Buffer into guest.
+    for replicate in range(1):
+        name = 'buffer into %s' % guests[guest_index].name
+        itc_experiment_set.addExperiment( ITCHeuristicExperiment(name=name, syringe_source=buffer_trough, cell_source=guest_solutions[guest_index], protocol=blank_protocol, cell_concentration=0.2*millimolar, buffer_source=buffer_trough) )
+        #rescale to match host into guest experiment concentrations.
+        itc_experiment_set.experiments[-1].rescale(tfactor=factors[replicate])
 
 # Add cleaning experiment.
 name = 'final cleaning water titration'
@@ -107,7 +111,7 @@ for replicate in range(nfinal):
     itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=control_protocol) )
 
 # Check that the experiment can be carried out using available solutions and plates.
-itc_experiment_set.validate(omit_zeroes=True)
+itc_experiment_set.validate(print_volumes=True, omit_zeroes=True)
 
 # Write Tecan EVO pipetting operations.
 worklist_filename = 'setup-itc.gwl'

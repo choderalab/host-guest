@@ -114,7 +114,7 @@ class ITCHeuristicExperiment(ITCExperiment):
         
         # c = [M]_0 * Ka
         c = self.cell_concentration * Ka
-        
+
         #R_m = 6.4/c^0.2 + 13/c
         rm= 6.4/numpy.power(c,0.2) + 13/c
 
@@ -128,26 +128,67 @@ class ITCHeuristicExperiment(ITCExperiment):
         #compute the dilution factors
         self.syringe_dilution_factor = numpy.float(self.syringe_concentration / self.syringe_source.concentration)
 
-    def rescale(self):
-        """Rescale the concentrations, in case they are larger than the source."""
+    def rescale(self, sfactor=None, cfactor=None, tfactor=None):
+        """Rescale the concentrations while keeping same ratios, adjust in case they are larger than the source.
+
+        Parameters
+        ----------
+        sfactor : float
+            if not None, also scale syringe concentrations by this factor.
+        cfactor : float
+            if not None, also scale cell concentration by this factor.
+        tfactor : float
+            if not None, scale all concentrations by this factor.
+
+        Returns
+        -------
+        float
+            the final factor by which everything was scaled
+        """
+
         # if syringe concentration is larger than stock
-        if self.syringe_concentration > self.syringe_source.concentration:
-            sfactor =   self.syringe_source.concentration / self.syringe_concentration 
+        if sfactor is None:
+            sfactor = 1.00
+        elif self.syringe_concentration is None:
+            raise RuntimeWarning("Attempted to rescale nonexistent solution.")
+        if cfactor is None:
+            cfactor = 1.00
+        if tfactor is None:
+            tfactor = 1.00
+
+        # If there is no syringe concentration, don't attempt to scale.
+        if self.syringe_concentration is not None:
+
+            # Syringe concentration scaling factor
+            sfactor *= tfactor
+            if self.syringe_concentration > self.syringe_source.concentration:
+                # Multiply original factor by the necessary rescaling
+                sfactor *= self.syringe_source.concentration / self.syringe_concentration
             #scale down to stock
+            sfactor *= tfactor
             self.syringe_concentration *= sfactor
             #cell is scaled by same factor
             self.cell_concentration *= sfactor
-            
+
+        # Cell concentration scaling factor
+        cfactor *= tfactor
+
         if self.cell_concentration > self.cell_source.concentration:
-            cfactor =   self.cell_source.concentration / self.cell_concentration 
-            #scale down to stock
-            self.cell_concentration *= cfactor
-            #syringe is scaled by same factor
-            self.syringe_concentration *= cfactor  
-            
+            # Multiply original factor by the necessary rescaling
+            cfactor *= self.cell_source.concentration / self.cell_concentration
+        #scale down to stock
+
+        self.cell_concentration *= cfactor
+        #syringe is scaled by same factor
+        if self.syringe_concentration is not None:
+            self.syringe_concentration *= cfactor
+
         #recompute dilution factors
-        self.syringe_dilution_factor = self.syringe_concentration / self.syringe_source.concentration
+        if self.syringe_concentration is not None:
+            self.syringe_dilution_factor = self.syringe_concentration / self.syringe_source.concentration
         self.cell_dilution_factor = self.cell_concentration / self.cell_source.concentration
+
+        return sfactor * cfactor
             
 
 class ITCExperimentSet(object):
@@ -240,7 +281,7 @@ class ITCExperimentSet(object):
         else:
             self._tracked_quantities[name] = volume
 
-    def validate(self, volumes=True,omit_zeroes=True):
+    def validate(self, print_volumes=True,omit_zeroes=True):
         """
         Validate that the specified set of ITC experiments can actually be set up, raising an exception if not.
 
@@ -453,7 +494,7 @@ class ITCExperimentSet(object):
             # Store Tecan and Excel data for this experiment.
             experiment.tecandata = tecandata
             experiment.itcdata = itcdata
-            if volumes: print volume_report
+            if print_volumes: print volume_report
         # Save Tecan worklist.
         self.worklist = worklist_script
 
