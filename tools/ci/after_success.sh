@@ -10,10 +10,10 @@ if [[ "$TRAVIS_BRANCH" != "master" ]]; then
 fi
 
 
-if [[ "2.7 3.3" =~ "$python" ]]; then
-    conda install --yes binstar
-    binstar -t $BINSTAR_TOKEN  upload --force -u omnia -p gaff2xml-dev $HOME/miniconda/conda-bld/linux-64/gaff2xml-dev-*
-fi
+#if [[ "2.7 3.3" =~ "$python" ]]; then
+#    conda install --yes binstar
+#    binstar -t $BINSTAR_TOKEN  upload --force -u omnia -p gaff2xml-dev $HOME/miniconda/conda-bld/linux-64/gaff2xml-dev-*
+#fi
 
 if [[ "$python" != "2.7" ]]; then
     echo "No deploy on PYTHON_VERSION=${python}"; exit 0
