@@ -1,4 +1,4 @@
 numpy
 openmm
-openpyxl=2.0.0
+openpyxl=2.0.2
 nose
