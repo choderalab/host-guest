@@ -1,5 +1,5 @@
 package:
-  name: gaff2xml
+  name: host-guest
   version: !!str dev
 
 
@@ -12,7 +12,7 @@ requirements:
     - setuptools
     - mdtraj-dev
     - openmm    
-    - ambermini    
+    - ambermini
 
   run:
     - python
@@ -23,6 +23,6 @@ requirements:
     - ambermini    
 
 about:
-  home: https://github.com/choderalab/gaff2xml
+  home: https://github.com/choderalab/host-guest
   license: GNU Lesser General Public License v2 or later (LGPLv2+)
 
