@@ -33,7 +33,7 @@ source_plate = Labware(RackLabel='SourcePlate', RackType='5x3 Vial Holder')
 # TODO : Use actual compound and solvent masses.
 # NOTE: Host solution is diluted by 10x.
 from automation import SimpleSolution, PipettingLocation
-host_solution = SimpleSolution(compound=host, compound_mass=16.005*milligrams, solvent=buffer, solvent_mass=9.8011*grams, location=PipettingLocation(source_plate.RackLabel, source_plate.RackType, 1))
+host_solution = SimpleSolution(compound=host, compound_mass=16.76*milligrams, solvent=buffer, solvent_mass=10.2628*grams, location=PipettingLocation(source_plate.RackLabel, source_plate.RackType, 1))
 guest_solutions = list()
 
 #guest_compound_masses = Quantity([2.145, 1.268, 1.576, 1.940, 1.919, 1.555, 1.391, 1.535, 1.679, 2.447, 1.514, 1.946, 1.781, 2.089], milligrams)
