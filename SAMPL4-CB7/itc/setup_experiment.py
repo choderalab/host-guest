@@ -11,7 +11,7 @@ buffer = Solvent('buffer', density=1.014*grams/milliliter)
 
 # Define compounds.
 from automation import Compound
-nguests = 6 # overnight from 5pm till 9am
+nguests = 6  # overnight from 5pm till 9am
 #nguests = 14 # number of guest compounds
 #nguests = 7 # number of guest compounds # DEBUG (one source plate only)
 host = Compound('host', molecular_weight=1162.9632*daltons, purity=0.7133)
@@ -123,8 +123,8 @@ for guest_index in range(nguests):
 
 
 # Add cleaning experiment.
-name = 'final cleaning water titration'
-itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=cleaning_protocol) )
+#name = 'final cleaning water titration'
+#itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=cleaning_protocol) )
 
 # Water control titrations.
 nfinal = 2
