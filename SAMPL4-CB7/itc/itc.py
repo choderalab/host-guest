@@ -506,7 +506,6 @@ class ITCExperimentSet(object):
             print "%32s %12.3f mL" % (key, self._tracked_quantities[key] / units.milliliters)
 
         # Report expected waste
-
         print "Expected waste (3% of total):"
         keys = self._tracked_quantities.keys()
         keys.sort()

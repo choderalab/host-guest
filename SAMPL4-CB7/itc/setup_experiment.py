@@ -133,7 +133,15 @@ for replicate in range(nfinal):
     itc_experiment_set.addExperiment( ITCExperiment(name=name, syringe_source=water_trough, cell_source=water_trough, protocol=control_protocol) )
 
 # Check that the experiment can be carried out using available solutions and plates.
+
 itc_experiment_set.validate(print_volumes=True, omit_zeroes=True)
+
+#For convenience, concentrations
+for g,guest in enumerate(guest_solutions, start=1):
+    print "guest%02d"% g, guest.concentration.in_units_of(millimolar)
+
+print "host", host_solution.concentration.in_units_of(millimolar)
+
 
 # Write Tecan EVO pipetting operations.
 worklist_filename = 'setup-itc.gwl'
