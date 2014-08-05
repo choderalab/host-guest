@@ -47,6 +47,10 @@ coverage.xml
 .idea/
 *.iml
 
+#eclipse
+.project
+.pydevproject
+
 # Sphinx documentation
 docs/_build/
 
