@@ -505,6 +505,14 @@ class ITCExperimentSet(object):
         for key in keys:
             print "%32s %12.3f mL" % (key, self._tracked_quantities[key] / units.milliliters)
 
+        # Report expected waste
+
+        print "Expected waste (3% of total):"
+        keys = self._tracked_quantities.keys()
+        keys.sort()
+        for key in keys:
+            print "%32s %12.3f mL" % (key, 0.03 * self._tracked_quantities[key] / units.milliliters)
+
         # Set validated flag.
         self._validated = True
 
