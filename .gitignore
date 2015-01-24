@@ -54,7 +54,3 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
-# Script generated output
-run-itc.xls?
-setup-itc.gwl
-

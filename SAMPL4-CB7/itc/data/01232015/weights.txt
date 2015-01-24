@@ -1,0 +1,31 @@
+host
+8.2954165056 milligram
+guest 1
+2.03892 milligram
+guest 2
+1.205295 milligram
+guest 3
+1.4980875 milligram
+guest 4
+1.8440175 milligram
+guest 5
+1.8243225 milligram
+guest 6
+1.4783925 milligram
+guest 7
+1.32249 milligram
+guest 8
+1.459185 milligram
+guest 9
+1.5959775 milligram
+guest 10
+2.3262525 milligram
+guest 11
+1.4395875 milligram
+guest 12
+1.8498675 milligram
+guest 13
+1.69338 milligram
+guest 14
+1.9861725 milligram
+
