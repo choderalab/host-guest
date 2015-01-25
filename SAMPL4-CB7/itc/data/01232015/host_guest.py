@@ -96,13 +96,13 @@ guest_compound_masses = Quantity([2.210,
                                  ureg.milligram)
 
 # try to prepare this:
-print('host')
-print (host.molecular_weight * host.purity * Quantity('1 millimole / liter') * Quantity('10 milliliter')).to(
-    'milligram')
+#print('host')
+#print (host.molecular_weight * host.purity * Quantity('1 millimole / liter') * Quantity('10 milliliter')).to(
+#    'milligram')
 
-for g,guest in enumerate(guests, start=1):
-    print('guest %d' % g)
-    print (guest.molecular_weight * guest.purity * Quantity('1 millimole / liter') * Quantity('10 milliliter')).to('milligram')
+#for g,guest in enumerate(guests, start=1):
+#    print('guest %d' % g)
+#    print (guest.molecular_weight * guest.purity * Quantity('1 millimole / liter') * Quantity('10 milliliter')).to('milligram')
 
 
 guest_solvent_masses = Quantity([11.0478,
@@ -286,26 +286,26 @@ for replicate in range(nfinal):
 
 itc_experiment_set.validate(print_volumes=False, omit_zeroes=True)
 
-# # For convenience, source concentrations
-# for g, guest in enumerate(guest_solutions, start=1):
-#     print("guest%02d" % g, (guest.concentration.to('millimolar')))
-#
-# print("host", host_solution.concentration.to('millimolar'))
-#
-# # For information, experimental conditions
-# for experiment in itc_experiment_set.experiments:
-#     try:
-#         print('\033[92m')
-#         print(experiment.name)
-#         print('\033[0m')
-#         print(experiment.cell_source.name)
-#         print((experiment.cell_concentration * experiment.cell_source.compound.molecular_weight).to('milligrams / milliliter') /  experiment.cell_source.compound.purity)
-#         print(experiment.syringe_source.name)
-#         print((experiment.syringe_concentration * experiment.syringe_source.compound.molecular_weight).to(
-#             'milligrams / milliliter') / experiment.syringe_source.compound.purity)
-#
-#     except AttributeError:
-#         pass
+# For convenience, source concentrations
+#for g, guest in enumerate(guest_solutions, start=1):
+#    print("guest%02d" % g, (guest.concentration.to('millimolar')))
+
+#print("host", host_solution.concentration.to('millimolar'))
+
+# For information, experimental conditions
+for experiment in itc_experiment_set.experiments:
+    try:
+        print('\033[92m')
+        print(experiment.name)
+        print('\033[0m')
+        guest_mol = ((experiment.cell_concentration * 202.8 * Quantity('microliter')).to('millimole'))
+        host_mol = ((experiment.syringe_concentration * 30 * Quantity('microliter')).to('millimole'))
+	
+	print(experiment.cell_source.name, experiment.syringe_source.name, 'Rm (h/g) final' )
+        print(guest_mol, host_mol, host_mol/guest_mol)
+
+    except (AttributeError, TypeError):
+        pass
 
 # Write Tecan EVO pipetting operations.
 worklist_filename = 'host-guest-itc.gwl'
