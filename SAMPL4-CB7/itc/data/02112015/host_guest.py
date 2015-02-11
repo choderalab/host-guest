@@ -16,7 +16,7 @@ buffer = Solvent('buffer', density=1.014 * ureg.gram / ureg.milliliter)
 # Define compounds.
 
 #nguests = 6  # overnight from 5pm till 9am
-nguests = 7 # number of guest compounds 5 pm till 1 pm
+nguests = 4 # number of guest compounds 5 pm till 1 pm
 # nguests = 7 # number of guest compounds # DEBUG (one source plate only)
 host = Compound('host', molecular_weight=1162.9632 * ureg.gram / ureg.mole, purity=0.7133)
 guest_molecular_weights = [
@@ -74,10 +74,10 @@ source_plate = Labware(RackLabel='SourcePlate', RackType='5x3 Vial Holder')
 
 host_solution = SimpleSolution(
     compound=host,
-    compound_mass=32 *
+    compound_mass=33.490 *
     ureg.milligram,
     solvent=buffer,
-    solvent_mass=10.4732 *
+    solvent_mass=10.1151 *
     ureg.gram,
     location=PipettingLocation(
         source_plate.RackLabel,
