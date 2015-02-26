@@ -1,2 +1,2 @@
 Itctools commit version:
-878447e0eba4b1a9454a9455cf93abf0ea9b5597
+3979b5c334332b896d473b94281ab0ce64d3f4ec
