@@ -1,0 +1,8 @@
+Expected waste (3% of total):
+                          Buffer        0.162 mL
+                           Water        0.048 mL
+                         guest01        0.006 mL
+                         guest02        0.006 mL
+                         guest03        0.002 mL
+                         guest04        0.004 mL
+                            host        0.018 mL
